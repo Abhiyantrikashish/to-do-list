@@ -1,0 +1,144 @@
+import csv
+import matplotlib.pyplot as plt
+
+class Task:
+   # represents a single task in the  list.
+    def __init__(self, title, is_completed=False):
+        self.title = title
+        self.is_completed = is_completed
+
+    def mark_complete(self):
+        """Mark this task as complete."""
+        self.is_completed = True
+
+    def mark_incomplete(self):
+        """Mark this task as incomplete."""
+        self.is_completed = False
+
+
+class ToDoList:
+    # manages a list of tasks
+    def __init__(self, filename='tasks.csv'):
+        self.tasks = []
+        self.filename = filename
+        self.load_from_csv()
+
+    def add_task(self, title):
+        #adds a new task to the to-do list.
+        task = Task(title)
+        self.tasks.append(task)
+        print(f'Task "{title}" added.')
+        self.save_to_csv()
+
+    def delete_task(self, index):
+        # delete a task from the to-do list by index.
+        if 0 <= index < len(self.tasks):
+            removed_task = self.tasks.pop(index)
+            print(f'Task "{removed_task.title}" deleted.')
+            self.save_to_csv()
+        else:
+            print("Invalid task number.")
+
+    def mark_task_complete(self, index):
+        #mark a task as complete by index.
+        if 0 <= index < len(self.tasks):
+            self.tasks[index].mark_complete()
+            print(f'Task "{self.tasks[index].title}" marked as complete.')
+            self.save_to_csv()
+        else:
+            print("Invalid task number.")
+
+    def display_tasks(self):
+        # display the list of tasks with the completion status.
+        if not self.tasks:
+            print("No tasks in the list.")
+        else:
+            print("\nYour Tasks:")
+            for i, task in enumerate(self.tasks, start=1):     ## we can use other signs for status i used these here
+                status = "✓" if task.is_completed else "✗"
+                print(f"{i}. [{status}] {task.title}")
+
+    def plot_task_status(self):
+        # plot a pie chart of completed vs incomplete tasks.
+        completed = sum(task.is_completed for task in self.tasks)
+        incomplete = len(self.tasks) - completed
+
+        labels = ['Completed', 'Incomplete']
+        sizes = [completed, incomplete]
+        colors = ['#4CAF50', '#FFC107']  # green for completed, yellow for incomplete  other colors can also be used 
+
+        plt.figure(figsize=(6, 6))
+        plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors)
+        plt.title('task completion Status')
+        plt.show()
+
+    def save_to_csv(self):
+       
+    # saving the current list of tasks to a csv file.
+       
+        with open(self.filename, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Title', 'Completed'])  # Header
+            for task in self.tasks:
+                writer.writerow([task.title, task.is_completed])
+
+    def load_from_csv(self):
+        
+        # loading tasks from a CSV file.
+        
+        try:
+            with open(self.filename, mode='r') as file:
+                reader = csv.reader(file)
+                next(reader)  # Skip header
+                for row in reader:
+                    title, is_completed = row
+                    task = Task(title, is_completed == 'True')
+                    self.tasks.append(task)
+        except FileNotFoundError:
+            # if file doesn't exist, start with an empty task list
+            pass
+
+# user interaction with the List is in console
+def main():
+    todo_list = ToDoList()
+
+    while True:
+        print("\nTo-Do List Manager")
+        print("1. View Tasks")
+        print("2. Add Task")
+        print("3. Delete Task")
+        print("4. Mark Task as Complete")
+        print("5. Plot Task Status")
+        print("6. Quit")
+        
+        choice = input("choose an option (1-6): ")
+
+        if choice == '1':
+            todo_list.display_tasks()
+        elif choice == '2':
+            title = input("enter the task title: ")
+            todo_list.add_task(title)
+        elif choice == '3':
+            todo_list.display_tasks()
+            try:
+                task_index = int(input("enter the task number to delete: ")) - 1
+                todo_list.delete_task(task_index)
+            except ValueError:
+                print("please enter a valid number.")
+        elif choice == '4':
+            todo_list.display_tasks()
+            try:
+                task_index = int(input("enter the task number to mark as complete: ")) - 1
+                todo_list.mark_task_complete(task_index)
+            except ValueError:
+                print("please enter a valid number.")
+        elif choice == '5':
+            todo_list.plot_task_status()
+        elif choice == '6':
+            print("goodbye!")
+            break
+        else:
+            print("invalid choice. please select a valid option.")
+
+if __name__ == "__main__":
+    main()
